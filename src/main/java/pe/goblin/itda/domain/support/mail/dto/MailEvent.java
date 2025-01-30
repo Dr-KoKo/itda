@@ -22,8 +22,8 @@ public class MailEvent {
         return subject;
     }
 
-    public String getTemplatePath() {
-        return template == null ? null : template.getPath();
+    public MailTemplate getTemplate() {
+        return template;
     }
 
     public Map<String, String> getArguments() {
