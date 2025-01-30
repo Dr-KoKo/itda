@@ -6,7 +6,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-import pe.goblin.itda.domain.support.mail.exception.MailException;
+import pe.goblin.itda.domain.support.mail.exception.MailTransportException;
 
 import java.util.Arrays;
 
@@ -18,7 +18,7 @@ public class MailClient {
         this.mailSender = mailSender;
     }
 
-    public void send(MailRequest request) throws MailException {
+    public void send(MailRequest request) throws MailTransportException {
         try {
             if (request.isHtml()) {
                 MimeMessage mimeMessage = createMimeMessage(request.getTo(), request.getSubject(), request.getText());
@@ -28,18 +28,18 @@ public class MailClient {
                 mailSender.send(simpleMessage);
             }
         } catch (org.springframework.mail.MailException e) {
-            throw new MailException("failed to send message", e);
+            throw new MailTransportException("failed to send message", e);
         }
     }
 
-    public void send(MailRequest... requests) throws MailException {
+    public void send(MailRequest... requests) throws MailTransportException {
         MimeMessage[] mimeMessages = Arrays.stream(requests)
                 .map(request -> createMimeMessage(request.getTo(), request.getSubject(), request.getText()))
                 .toArray(MimeMessage[]::new);
         try {
             mailSender.send(mimeMessages);
         } catch (org.springframework.mail.MailException e) {
-            throw new MailException("failed to send message", e);
+            throw new MailTransportException("failed to send message", e);
         }
     }
 
@@ -60,7 +60,7 @@ public class MailClient {
             helper.setSubject(subject);
             helper.setText(html, true);
         } catch (MessagingException e) {
-            throw new MailException("failed to create MimeMessage", e);
+            throw new MailTransportException("failed to create MimeMessage", e);
         }
         return message;
     }
