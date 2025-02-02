@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import pe.goblin.itda.global.config.MailConfig;
 
-@SpringBootTest(classes = {MailConfig.class, MailClient.class})
+@SpringBootTest(classes = {MailSenderAutoConfiguration.class, MailClient.class})
 @Tag("external")
 class MailClientTest {
     private static final Logger log = LoggerFactory.getLogger(MailClientTest.class);
