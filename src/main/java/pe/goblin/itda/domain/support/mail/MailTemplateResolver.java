@@ -24,7 +24,7 @@ public class MailTemplateResolver {
         this.resourceLoader = resourceLoader;
     }
 
-    public String resolve(MailTemplate template, Map<String, String> parameters) {
+    public String resolve(MailTemplate template, Map<String, String> parameters) throws MailTemplateException {
         if (template == null) {
             throw new MailTemplateException("template can not be null");
         }
