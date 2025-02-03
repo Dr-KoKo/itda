@@ -19,9 +19,9 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
     private MyBatisMailEventRepository myBatisMailEventRepository;
 
     @Nested
-    class Save_Must {
+    class Save {
         @Test
-        void insert_record() {
+        void must_insert_record() {
             // given
             MailEvent mailEvent = createTestMailEvent();
 
@@ -35,9 +35,9 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
     }
 
     @Nested
-    class SaveAll_Must {
+    class SaveAll {
         @Test
-        void insert_all_record() {
+        void must_insert_all_record() {
             // given
             int size = 3;
             List<MailEvent> mailEvents = createTestMailEvents(size);
@@ -56,9 +56,9 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
     }
 
     @Nested
-    class FindByStatus_Must {
+    class FindByStatus {
         @Test
-        void select_record_with_the_status() {
+        void must_select_record_with_the_status() {
             // given
             int size = 5;
             Status status = Status.FAILED;
@@ -74,7 +74,7 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
         }
 
         @Test
-        void select_record_with_the_limit() {
+        void must_select_record_with_the_limit() {
             // given
             int size = 5;
             Status status = Status.FAILED;
@@ -92,9 +92,9 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
     }
 
     @Nested
-    class UpdateStatus_Must {
+    class UpdateStatus {
         @Test
-        void change_status() {
+        void must_change_status() {
             // given
             Status statusBefore = Status.SENDING;
             MailEvent mailEvent = createTestMailEvent(statusBefore);
@@ -118,9 +118,9 @@ class MyBatisMailEventRepositoryTest extends MyBatisRepositoryTest implements Ma
     }
 
     @Nested
-    class UpdateStatusInBulk_Must {
+    class UpdateStatusInBulk {
         @Test
-        void change_status() {
+        void must_change_status() {
             // given
             int size = 5;
             Status statusBefore = Status.SENDING;
