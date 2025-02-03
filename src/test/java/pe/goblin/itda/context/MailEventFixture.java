@@ -34,7 +34,11 @@ public interface MailEventFixture {
         if (subject == null || status == null) {
             throw new IllegalArgumentException("Subject and Status must not be null");
         }
-        return new TestMailEvent(null, "donghar@naver.com", subject, MailTemplate.EMAIL_VERIFICATION, Map.of("verificationCode", "123123"), status);
+        return createTestMailEvent(null, subject, status);
+    }
+
+    default MailEvent createTestMailEvent(Long id, String subject, Status status) {
+        return new TestMailEvent(id, "donghar@naver.com", subject, MailTemplate.EMAIL_VERIFICATION, Map.of("verificationCode", "123123"), status);
     }
 
     default List<MailEvent> createTestMailEvents(int size) {
