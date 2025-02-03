@@ -21,3 +21,15 @@ spring:
   sql:
     init:
       data-locations: classpath:db/init/*.sql
+
+logging:
+  level:
+    root: info
+    pe.goblin.itda: debug
+    org.mybatis: debug
+    org.apache.ibatis.type: debug
+    org.springframework.jdbc: debug
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: pe.goblin.itda.common.mybatis.typehandler
