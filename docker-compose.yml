@@ -1,0 +1,39 @@
+services:
+  db-mysql:
+    image: mysql:8.3.0
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: not_allowed_go_away
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+      MYSQL_DATABASE: test_db
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 2
+    networks:
+      - network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-mysql:3306/test_db
+      - SPRING_DATASOURCE_USERNAME=test_user
+      - SPRING_DATASOURCE_PASSWORD=test_password
+      - SPRING_MAIL_HOST=smtp.some_domain.com
+      - SPRING_MAIL_USERNAME=not_allowed@some_domain.com
+      - SPRING_MAIL_PASSWORD=xxxxxx
+    depends_on:
+      db-mysql:
+        condition: service_healthy
+    networks:
+      - network
+networks:
+  network:
