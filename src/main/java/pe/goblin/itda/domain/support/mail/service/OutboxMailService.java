@@ -13,10 +13,7 @@ import pe.goblin.itda.domain.support.mail.exception.MailTemplateException;
 import pe.goblin.itda.domain.support.mail.exception.MailTransportException;
 import pe.goblin.itda.domain.support.mail.repository.MailEventRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Do not declare {@link Transactional}
@@ -41,9 +38,8 @@ public class OutboxMailService {
     public MailResult send() {
         List<MailEvent> mailEvents = fetchMailEvents();
         MailResult result = new MailResult(mailEvents.size());
-        Map<MailClient.MailRequest, Long> mailRequestToEventId = new HashMap<>();
-        List<MailClient.MailRequest> mailRequests = prepareMailRequests(mailEvents, mailRequestToEventId, result);
-        sendMails(mailRequests, mailRequestToEventId, result);
+        List<MailEventHolder> mailRequests = prepareMailRequests(mailEvents, result);
+        sendMails(mailRequests, result);
         return result;
     }
 
@@ -51,8 +47,8 @@ public class OutboxMailService {
         return mailEventRepository.findByStatusOrderByCreatedAt(Status.REQUESTED, BULK_SIZE);
     }
 
-    private List<MailClient.MailRequest> prepareMailRequests(List<MailEvent> mailEvents, Map<MailClient.MailRequest, Long> mailRequestToEventId, MailResult result) {
-        List<MailClient.MailRequest> mailRequests = new ArrayList<>();
+    private List<MailEventHolder> prepareMailRequests(List<MailEvent> mailEvents, MailResult result) {
+        List<MailEventHolder> mailEventHolders = new ArrayList<>();
         for (MailEvent event : mailEvents) {
             updateStatus(event.getId(), Status.SENDING);
             String htmlContent;
@@ -62,36 +58,34 @@ public class OutboxMailService {
                 handleTemplateResolveFailure(event, e, result);
                 continue;
             }
-            MailClient.MailRequest mailRequest = new MailClient.MailRequest(event.getReceiver(), event.getSubject(), htmlContent, true);
-            mailRequests.add(mailRequest);
-            mailRequestToEventId.put(mailRequest, event.getId());
+            mailEventHolders.add(new MailEventHolder(event, htmlContent));
         }
-        return mailRequests;
+        return mailEventHolders;
     }
 
     private void handleTemplateResolveFailure(MailEvent mailEvent, MailTemplateException exception, MailResult result) {
-        log.error("Template resolve failure", exception);
+        log.error("Template resolve failure for MailEvent ID: {}", mailEvent.getId(), exception);
         updateStatus(mailEvent.getId(), Status.FAILED);
         result.addException(mailEvent.getId(), exception);
     }
 
-    private void sendMails(List<MailClient.MailRequest> mailRequests, Map<MailClient.MailRequest, Long> mailRequestToEventId, MailResult result) {
-        if (mailRequests.isEmpty()) return;
+    private void sendMails(List<MailEventHolder> mailHolders, MailResult result) {
+        if (mailHolders.isEmpty()) return;
 
         try {
-            mailClient.send(mailRequests.toArray(MailClient.MailRequest[]::new));
-            List<Long> mailEventIds = mailRequests.stream().map(mailRequestToEventId::get).toList();
+            mailClient.send(mailHolders.stream().map(MailEventHolder::getMailRequest).toArray(MailClient.MailRequest[]::new));
+            List<Long> mailEventIds = mailHolders.stream().map(MailEventHolder::getId).toList();
             updateStatus(mailEventIds, Status.SUCCESS);
         } catch (MailTransportException e) {
-            handleMailClientFailure(mailRequests, mailRequestToEventId, e, result);
+            handleMailClientFailure(mailHolders, e, result);
         }
     }
 
-    private void handleMailClientFailure(List<MailClient.MailRequest> mailRequests, Map<MailClient.MailRequest, Long> mailRequestToEventId, MailTransportException exception, MailResult result) {
-        log.error("Mail client failure", exception);
-        List<Long> mailEventIds = mailRequests.stream().map(mailRequestToEventId::get).toList();
+    private void handleMailClientFailure(List<MailEventHolder> mailEventHolders, MailTransportException exception, MailResult result) {
+        List<Long> mailEventIds = mailEventHolders.stream().map(MailEventHolder::getId).toList();
+        log.error("Mail client failure for MailEvent IDs: {}", mailEventIds, exception);
         updateStatus(mailEventIds, Status.FAILED);
-        result.addException(mailRequestToEventId.values(), exception);
+        result.addException(mailEventIds, exception);
     }
 
     private void updateStatus(Long mailEventId, Status status) {
@@ -100,6 +94,24 @@ public class OutboxMailService {
 
     private void updateStatus(List<Long> mailEventIds, Status status) {
         transactionTemplate.executeWithoutResult(transactionStatus -> mailEventRepository.updateStatus(mailEventIds, status));
+    }
+
+    private static class MailEventHolder {
+        private final MailEvent mailEvent;
+        private final String content;
+
+        MailEventHolder(MailEvent mailEvent, String content) {
+            this.mailEvent = mailEvent;
+            this.content = content;
+        }
+
+        Long getId() {
+            return mailEvent.getId();
+        }
+
+        MailClient.MailRequest getMailRequest() {
+            return new MailClient.MailRequest(mailEvent.getReceiver(), mailEvent.getSubject(), content, true);
+        }
     }
 
     public static class MailResult {
@@ -132,7 +144,7 @@ public class OutboxMailService {
         }
 
         public Map<Long, Throwable> getExceptions() {
-            return exceptions;
+            return Collections.unmodifiableMap(exceptions);
         }
     }
 }
