@@ -1,0 +1,13 @@
+{
+  "name": "elasticsearch-sink-connector",
+  "config": {
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "connection.url": "http://elasticsearch:9200",
+    "type.name": "_doc",
+    "topics": "cdc.test_db.posts",
+    "key.ignore": "true",
+    "schema.ignore": "true",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+  }
+}
