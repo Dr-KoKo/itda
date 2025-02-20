@@ -4,7 +4,7 @@
     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
     "connection.url": "http://elasticsearch:9200",
     "type.name": "_doc",
-    "topics": "cdc.test_db.posts",
+    "topics.regex": "cdc.test_db.+",
     "key.ignore": "true",
     "schema.ignore": "true",
     "transforms": "unwrap",
