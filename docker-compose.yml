@@ -1,39 +1,128 @@
 services:
-  db-mysql:
+  # Kafka
+  kafka:
+    image: bitnami/kafka:latest
+    networks:
+      - kafka_network
+    ports:
+      - '9094:9094'
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+  # Kafka Connect (Debezium)
+  connect:
+    build:
+      context: ./mnt/connect
+      dockerfile: Dockerfile
+    networks:
+      - kafka_network
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083" ]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      kafka:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: connect-cluster
+      CONFIG_STORAGE_TOPIC: connect-configs
+      OFFSET_STORAGE_TOPIC: connect-offsets
+      STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_PLUGIN_PATH: "/kafka/connect,/kafka/connect/elasticsearch"
+
+  # Kafka Connect (Debezium) Initializer
+  connect_initializer:
+    image: curlimages/curl
+    networks:
+      - kafka_network
+    volumes:
+      - ./mnt/connect/mysql-source.json:/config/source.json
+      - ./mnt/connect/es-sink.json:/config/sink.json
+    depends_on:
+      connect:
+        condition: service_healthy
+    entrypoint: [
+      "sh",
+      "-c",
+      "curl -X POST -H 'Content-Type: application/json' --data @/config/source.json http://connect:8083/connectors && \
+       curl -X POST -H 'Content-Type: application/json' --data @/config/sink.json http://connect:8083/connectors"
+    ]
+    restart: no
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    networks:
+      - app_network
+      - kafka_network
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+
+  # MySQL
+  mysql:
     image: mysql:8.3.0
-    restart: always
+    networks:
+      - app_network
+      - kafka_network
     ports:
       - "3306:3306"
     volumes:
       - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
     environment:
       MYSQL_ROOT_PASSWORD: not_allowed_go_away
       MYSQL_USER: test_user
       MYSQL_PASSWORD: test_password
       MYSQL_DATABASE: test_db
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 5s
-      retries: 2
-    networks:
-      - network
+
+  # Spring Application
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db-mysql:3306/test_db
-      - SPRING_DATASOURCE_USERNAME=test_user
-      - SPRING_DATASOURCE_PASSWORD=test_password
-      - SPRING_MAIL_HOST=smtp.some_domain.com
-      - SPRING_MAIL_USERNAME=not_allowed@some_domain.com
-      - SPRING_MAIL_PASSWORD=xxxxxx
-    depends_on:
-      db-mysql:
-        condition: service_healthy
     networks:
-      - network
+      - app_network
+    ports:
+      - "9090:9090"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/test_db
+      SPRING_DATASOURCE_USERNAME: test_user
+      SPRING_DATASOURCE_PASSWORD: test_password
+      SPRING_MAIL_HOST: smtp.some_domain.com
+      SPRING_MAIL_USERNAME: not_allowed@some_domain.com
+      SPRING_MAIL_PASSWORD: xxxxxx
+
 networks:
-  network:
+  app_network:
+  kafka_network:
