@@ -16,6 +16,13 @@ spring:
                 name: resourceServiceCircuitBreaker
                 fallbackUri: forward:/fallback/resources
 
+  security:
+    oauth2:
+      resourceserver: # 리소스서버 설정
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM}
+
 resilience4j:
   circuitbreaker:
     instances:
