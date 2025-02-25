@@ -6,7 +6,7 @@ spring:
     gateway:
       routes:
         - id: resource-service
-          uri: ${RESOURCE_SERVICE_URL:http://localhost:9090}
+          uri: ${RESOURCE_SERVICE_URL}
           predicates:
             - Path=/api/**
           filters:
@@ -20,8 +20,8 @@ spring:
     oauth2:
       resourceserver: # 리소스서버 설정
         jwt:
-          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM}
+          jwk-set-uri: ${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}
 
 resilience4j:
   circuitbreaker:
