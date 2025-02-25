@@ -88,7 +88,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
+      - ./resource-service/src/main/resources/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
       interval: 3s
@@ -102,7 +102,7 @@ services:
       MYSQL_DATABASE: test_db
 
   # Spring Application
-  app:
+  resource_service:
     build:
       context: .
       dockerfile: Dockerfile

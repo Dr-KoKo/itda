@@ -1,1 +1,4 @@
 rootProject.name = 'itda'
+include 'resource-service'
+include 'gateway-service'
+
