@@ -2,7 +2,7 @@
 name: Feature request
 about: 신규 기능
 title: ''
-labels: ''
+labels: "\U0001F41EBugFix"
 assignees: Dr-KoKo
 
 ---
