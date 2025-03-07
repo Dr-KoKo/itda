@@ -1,4 +1,44 @@
 services:
+  keycloak:
+    build:
+      context: ./mnt/keycloak
+      dockerfile: Dockerfile
+    networks:
+      - keycloak_network
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mnt/keycloak/data/import:/opt/keycloak/data/import
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak_password
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME=localhost
+    command: [ "start-dev", "--import-realm" ]
+
+  postgres:
+    image: postgres:17.4-alpine
+    networks:
+      - keycloak_network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak_password
+
   # Kafka
   kafka:
     image: bitnami/kafka:latest
@@ -101,6 +141,7 @@ services:
       MYSQL_PASSWORD: test_password
       MYSQL_DATABASE: test_db
 
+  # TODO resource-service & gateway-service 분리 배포
   # Spring Application
   resource_service:
     build:
@@ -126,3 +167,4 @@ services:
 networks:
   app_network:
   kafka_network:
+  keycloak_network:
