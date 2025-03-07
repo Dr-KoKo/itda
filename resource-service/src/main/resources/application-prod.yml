@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: resource-service
+
+  mail:
+    protocol: smtp
+    host: ${MAIL_HOST}
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp:
+        auth: true
+        timeout: 5000
+        starttls:
+          enable: true
+          required: true
+
+  security:
+    oauth2:
+      resourceserver: # 리소스서버 설정
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}
+
+  sql:
+    init:
+      data-locations: classpath:db/init/*.sql
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: pe.goblin.resourceservice.common.mybatis.typehandler
