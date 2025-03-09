@@ -9,7 +9,7 @@ import pe.goblin.resourceservice.domain.support.mail.exception.MailTemplateExcep
 
 import java.util.Map;
 
-@SpringBootTest(classes = {MailTemplateResolver.class})
+@SpringBootTest(classes = {MailTemplateResolver.class}, properties = "spring.profiles.active=test")
 class MailTemplateResolverTest {
     @Autowired
     private MailTemplateResolver resolver;

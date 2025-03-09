@@ -1,0 +1,52 @@
+server:
+  port: 9090 # Keycloak이 8080번 포트를 사용하고 있으니 다른 포트를 사용하세요. port 변경시 Keycloak의 redirect-uri 설정값도 변경되어야 합니다.
+
+spring:
+  application:
+    name: resource-service
+
+  mail:
+    protocol: smtp
+    host: ${MAIL_HOST}
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail.debug: true
+      mail.smtp:
+        auth: true
+        timeout: 5000
+        starttls:
+          enable: true
+          required: true
+
+  security:
+    oauth2:
+      resourceserver: # 리소스서버 설정
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/myrealm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/myrealm
+
+  sql:
+    init:
+      data-locations: classpath:db/init/*.sql
+
+logging:
+  level:
+    root: info
+    pe.goblin.resourceservice: debug
+    org.mybatis: debug
+    org.apache.ibatis.type: debug
+    org.springframework.jdbc: debug
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: pe.goblin.resourceservice.common.mybatis.typehandler
+
+keycloak:
+  realm: myrealm
+  auth-server-url: http://localhost:8080
+  resource: itda-resource-server
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET}

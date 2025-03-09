@@ -1,0 +1,9 @@
+{
+  "policies": [
+    {
+      "name": "Owner Only Policy",
+      "fileName": "owner-only-policy.js",
+      "description": "Owner Only Policy from a JS file"
+    }
+  ]
+}

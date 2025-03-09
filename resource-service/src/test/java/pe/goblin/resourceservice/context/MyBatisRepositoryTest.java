@@ -3,9 +3,11 @@ package pe.goblin.resourceservice.context;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.transaction.AfterTransaction;
 
 @MybatisTest
+@ActiveProfiles("test")
 public abstract class MyBatisRepositoryTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
