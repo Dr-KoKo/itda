@@ -31,3 +31,11 @@ spring:
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-handlers-package: pe.goblin.resourceservice.common.mybatis.typehandler
+
+keycloak:
+  realm: ${KEYCLOAK_REALM}
+  auth-server-url: ${KEYCLOAK_URL}
+  resource: ${KEYCLOAK_CLIENT_ID}
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET}
+  enforcement-mode: enforcing

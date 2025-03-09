@@ -25,8 +25,8 @@ spring:
     oauth2:
       resourceserver: # 리소스서버 설정
         jwt:
-          jwk-set-uri: http://localhost:${wiremock.server.port}/realms/myrealm/protocol/openid-connect/certs
-          issuer-uri: http://localhost:${wiremock.server.port}/realms/myrealm
+          jwk-set-uri: http://localhost:8080/realms/myrealm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/myrealm
 
   sql:
     init:
@@ -43,3 +43,10 @@ logging:
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-handlers-package: pe.goblin.resourceservice.common.mybatis.typehandler
+
+keycloak:
+  realm: myrealm
+  auth-server-url: http://localhost:8080
+  resource: itda-resource-server
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET}
