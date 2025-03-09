@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(classes = {MailSenderAutoConfiguration.class, MailClient.class})
+@SpringBootTest(classes = {MailSenderAutoConfiguration.class, MailClient.class}, properties = "spring.profiles.active=test")
 @Tag("external")
 class MailClientTest {
     private static final Logger log = LoggerFactory.getLogger(MailClientTest.class);
